@@ -5,6 +5,7 @@
 *.conllu
 *.lem
 *.toklabels
+*.properties
 
 data/
 stanza_test/
