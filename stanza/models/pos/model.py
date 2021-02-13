@@ -60,10 +60,9 @@ class Tagger(nn.Module):
 
         # classifiers
         self.upos_hid = nn.Linear(self.args['hidden_dim'] * 2, self.args['deep_biaff_hidden_dim'])
-        self.upos_clf = nn.Linear(self.args['deep_biaff_hidden_dim'], len(
-            vocab['upos']))  # nn.Linear applies a linear transformation to the incoming data: y = xAT + b
-        self.upos_clf.weight.data.zero_()  # fills weight data tensor with zeros.
-        self.upos_clf.bias.data.zero_()  # still in the end upos is a Linear object (a subclass of Module)
+        self.upos_clf = nn.Linear(self.args['deep_biaff_hidden_dim'], len(vocab['upos']))
+        self.upos_clf.weight.data.zero_()
+        self.upos_clf.bias.data.zero_()
 
         if share_hid:
             clf_constructor = lambda insize, outsize: nn.Linear(insize, outsize)
@@ -103,7 +102,7 @@ class Tagger(nn.Module):
         self.doc = doc
 
     def forward(self, word, word_mask, wordchars, wordchars_mask, upos, xpos, ufeats, pretrained, word_orig_idx,
-                sentlens, wordlens, orig_idx=None, morph_dict=None, start=None, end=None, document=None):
+                sentlens, wordlens, orig_idx=None, morph_dict=None, start=None, end=None):
 
         def pack(x):  # Packs a Tensor containing padded sequences of variable length.
             return pack_padded_sequence(x, sentlens, batch_first=True)

@@ -28,8 +28,9 @@ def unpack_batch(batch, use_cuda):
 
 class Trainer(BaseTrainer):
     """ A trainer for training models. """
-    def __init__(self, args=None, vocab=None, pretrain=None, model_file=None, use_cuda=False):
+    def __init__(self, args=None,  doc=None, vocab=None, pretrain=None, model_file=None, use_cuda=False):
         self.use_cuda = use_cuda
+        self.doc = doc
         if model_file is not None:
             # load everything from file
             self.load(model_file, pretrain)
@@ -37,7 +38,8 @@ class Trainer(BaseTrainer):
             # build model from scratch
             self.args = args
             self.vocab = vocab
-            self.model = Tagger(args, vocab, emb_matrix=pretrain.emb if pretrain is not None else None, share_hid=args['share_hid'])
+            self.doc = doc
+            self.model = Tagger(args, vocab, self.doc, emb_matrix=pretrain.emb if pretrain is not None else None, share_hid=args['share_hid'])
         self.parameters = [p for p in self.model.parameters() if p.requires_grad]
         if self.use_cuda:
             self.model.cuda()
@@ -64,7 +66,7 @@ class Trainer(BaseTrainer):
         self.optimizer.step()
         return loss_val
 
-    def predict(self, batch, unsort=True):
+    def predict(self, batch, unsort=True, morph_dict=None, start=None, end=None):
         inputs, orig_idx, word_orig_idx, sentlens, wordlens = unpack_batch(batch, self.use_cuda)
         word, word_mask, wordchars, wordchars_mask, upos, xpos, ufeats, pretrained = inputs
 

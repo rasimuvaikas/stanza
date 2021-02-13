@@ -29,6 +29,8 @@ from stanza.models.common.doc import *
 from stanza.utils.conll import CoNLL
 from stanza.models import _training_logging
 
+from stanza.models.pos.morph import MorphDictionary
+
 logger = logging.getLogger('stanza')
 
 def parse_args(args=None):
@@ -87,6 +89,7 @@ def parse_args(args=None):
     parser.add_argument('--cpu', action='store_true', help='Ignore CUDA.')
 
     parser.add_argument('--augment_nopunct', type=float, default=None, help='Augment the training data by copying this fraction of punct-ending sentences as non-punct.  Default of None will aim for roughly 10%')
+    parser.add_argument('--morph_dict', default=None, help="Path to the morphological dictionary.")
 
     args = parser.parse_args(args=args)
     return args
@@ -254,9 +257,10 @@ def evaluate(args):
     pretrain = load_pretrain(args)
 
     # load model
+    train_doc = Document(CoNLL.conll2dict(input_file=args['eval_file']))
     logger.info("Loading model from: {}".format(model_file))
     use_cuda = args['cuda'] and not args['cpu']
-    trainer = Trainer(pretrain=pretrain, model_file=model_file, use_cuda=use_cuda)
+    trainer = Trainer(doc=train_doc, pretrain=pretrain, model_file=model_file, use_cuda=use_cuda)
     loaded_args, vocab = trainer.args, trainer.vocab
 
     # load config
@@ -267,16 +271,28 @@ def evaluate(args):
     # load data
     logger.info("Loading data with batch size {}...".format(args['batch_size']))
     doc = Document(CoNLL.conll2dict(input_file=args['eval_file']))
-    batch = DataLoader(doc, args['batch_size'], loaded_args, pretrain, vocab=vocab, evaluation=True, sort_during_eval=True)
+    batch = DataLoader(doc, args['batch_size'], loaded_args, pretrain, vocab=vocab, evaluation=True, sort_during_eval=False)
     if len(batch) > 0:
         logger.info("Start evaluation...")
         preds = []
+        if args['morph_dict']:
+            print('Collecting morph dictionary...')
+            morph_dict = MorphDictionary(args['morph_dict'])
+            print('Completed.')
+        else:
+            morph_dict = None
+        start = 0
+        end = 0
         for i, b in enumerate(batch):
-            preds += trainer.predict(b)
+            end += len(b[8])  # b[8] is orig_idx
+            # data_orig_idx=batch.data_orig_idx,
+            preds += trainer.predict(b, morph_dict=morph_dict, start=start, end=end)
+            start += len(b[8])
     else:
         # skip eval if dev data does not exist
         preds = []
-    preds = utils.unsort(preds, batch.data_orig_idx)
+    # sorting is disabled by sort_during_eval=False, no need to unsort
+    # preds = utils.unsort(preds, batch.data_orig_idx)
 
     # write to file and score
     batch.doc.set([UPOS, XPOS, FEATS], [y for x in preds for y in x])
