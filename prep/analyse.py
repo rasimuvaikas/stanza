@@ -3,6 +3,8 @@ from stanza.utils.conll import CoNLL as C
 from stanza.models.common.doc import Document
 from spacy.gold import align
 
+import os
+
 import numpy as np
 from pandas import DataFrame as df
 
@@ -430,17 +432,17 @@ def compare(tag_type, comp_a:Analyzer, comp_b:Analyzer, print_errors=False):
 
 if __name__ == "__main__":
 
-    a = Analyzer('D:/north_sami/UD_North_Sami-Giella-master/sme_giella-ud-test.conllu',
-                 'D:/model_saved/sme/pos_stanza/baseline_on_pred.conllu', group=True)
+    ROOT = os.path.dirname(os.getcwd())
 
-    b = Analyzer('D:/north_sami/UD_North_Sami-Giella-master/sme_giella-ud-test.conllu',
-                 'D:/model_saved/sme/pos_stanza/real_final_post.conllu', group=True)
+    a = Analyzer(ROOT + '/data_files/sme/sme_giella-ud-test.conllu',
+                 ROOT + '/data_files/sme/baseline.parsed.conllu', group=True)
 
-    ac = Analyzer('C:/Users/zivil/stanza_resources/lt/lt_alksnis-ud-test.conllu',
-                 'D:/model_saved/lt/pos_stanza/baseline_predtokens.conllu')
+    b = Analyzer(ROOT + '/data_files/sme/sme_giella-ud-test.conllu',
+                 ROOT + '/data_files/sme/post_filtered.parsed.conllu', group=True)
 
-    bc = Analyzer('C:/Users/zivil/stanza_resources/lt/lt_alksnis-ud-test.conllu',
-                 'D:/model_saved/lt/pos_stanza/real_final_post5.conllu')
+    ac = Analyzer(ROOT + '/data_files/lt/lt_alksnis-ud-test.conllu', ROOT + '/data_files/lt/baseline.parsed.conllu')
+
+    bc = Analyzer(ROOT + '/data_files/lt/lt_alksnis-ud-test.conllu', ROOT + '/data_files/lt/post_filtered.parsed.conllu')
 
     ac.UPOS_matrix(latex=True)
     bc.UPOS_matrix(latex=True)
