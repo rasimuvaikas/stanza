@@ -228,7 +228,7 @@ class Tagger(nn.Module):
 
             # initialise hunspell for Lithuanian
             if self.args['lang'] == 'lt':
-                hunspell = Hunchecker('lt-LT_morphology', 'D:/Hunspell-Zodynai-ir-gramatika-v.45')
+                hunspell = Hunchecker('lt-LT_morphology', 'hunspell')
 
             print('Post-filtering...')
             for p in range(len(pair)):  # get a sentence
