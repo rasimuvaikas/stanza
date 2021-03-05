@@ -1,3 +1,5 @@
+import os
+
 import numpy as np
 import torch
 import torch.nn as nn
@@ -228,7 +230,8 @@ class Tagger(nn.Module):
 
             # initialise hunspell for Lithuanian
             if self.args['lang'] == 'lt':
-                hunspell = Hunchecker('lt-LT_morphology', 'hunspell')
+                root = os.path.dirname(os.getcwd())
+                hunspell = Hunchecker('lt-LT_morphology', root + '/data_files/hunspell')
 
             print('Post-filtering...')
             for p in range(len(pair)):  # get a sentence
