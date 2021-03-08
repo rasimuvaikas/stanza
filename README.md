@@ -19,6 +19,22 @@
 
 ## A Fork Implementing a Morphologically Informed Prediction Filtering Mechanism in the POS Tagger
 
+The post-filtering mechanism has been developed for Lithuanian and North Sami models, but can also be used with other pretrained taggers in prediction mode.
+
+A morphological dictionary in CONLL-U format, stored as a MySQL table, is necessary for the filter to be activated, and is accessed through stanza/stanza/models/pos/morph.py.
+
+To obtain filtered predictions run `python -m stanza.models.tagger` in the command line along with the following args:
+
+- --wordvec_dir (path to the pretrained embeddings directory)
+- --eval_file (path to a tokenized file to make predictions on)
+- --output_file (path to the predicted output file)
+- --lang (language code, e.g.: lt for Lithuanian, sme for North Sami)
+- --shorthand (language shorthand made up of language code, underscore, and treebank name, e.g.: lt_alksnis, sme_giella)
+- --mode predict
+- --save_dir (path to the directory where the pretrained model is stored)
+- --save_name (name of the pretrained model)
+- --morph_dict (name of the MySQL table storing the morphological dictionary)
+
 
 ## LICENSE
 
