@@ -52,7 +52,14 @@ The repository contains data files collected from the following sources:
  
 * https://github.com/UniversalDependencies/UD_North_Sami-Giella/tree/master:  
   `stanza/data_files/sme/sme_giella-ud-test.conllu`  
-  `stanza/data_files/sme/morph_dict/sme_giella-ud-train.conllu`  
+  `stanza/data_files/sme/morph_dict/sme_giella-ud-train.conllu`
+
+* https://hdl.handle.net/20.500.12259/45817:  
+  `stanza/frequent_lemma_study/lt/freqs_found.txt`  
+  
+* http://hdl.handle.net/11509/106:  
+  `stanza/frequent_lemma_study/sme/freqs_found.txt`  
+
 
 
 
