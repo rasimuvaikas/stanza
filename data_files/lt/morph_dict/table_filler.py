@@ -3,6 +3,10 @@ import os
 import mysql.connector
 import configparser
 
+"""
+Create MySQL tables storing Lithuanian morphological dictionaries
+"""
+
 if __name__ == '__main__':
 
     # generate and add numerals to the manually produced list
