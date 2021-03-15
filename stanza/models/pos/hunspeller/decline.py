@@ -1,4 +1,4 @@
-from stanza.models.pos.hunspeller.pos import Verb, Noun, Pronoun, Adjective, Numeral, Adverb
+from stanza.models.pos.hunspeller.pos import Verb, Noun, Pronoun, Adjective, Numeral, Adverb, numeralise
 
 # Decline numerals and convert other pos features into XPOS and UFeats formats
 
@@ -1044,3 +1044,262 @@ def adv_to_xpos(adv):
     xpos = '.'.join(xpos) + '.'
 
     return xpos
+
+def generate_numerals(fileName):
+    """
+    Generate numeral paradigms and print them into a .conllu file
+    :param fileName: file to write numerals to
+    """
+
+    number = ['vns', 'dgs']
+    gender = ['mot', 'vyr']
+    cases = ['V', 'K', 'N', 'G', 'Įn', 'Vt']
+
+    numerals = list()
+
+    # the main numerals
+    two_to_nine = ['du', 'trys', 'keturi', 'penki', 'šeši', 'septyni', 'aštuoni', 'devyni']
+    ord_one_to_nine = ['pirmas', 'antras', 'trečias', 'ketvirtas', 'penktas', 'šeštas', 'septintas', 'aštuntas',
+                       'devintas']
+    eleven_to_nineteen = ['vienuolika', 'dvylika', 'trylika', 'keturiolika', 'penkiolika', 'šešiolika', 'septyniolika',
+                          'aštuoniolika', 'devyniolika']
+    tens = ['dešimt', 'dvidešimt', 'trisdešimt', 'keturiasdešimt', 'penkiasdešimt', 'šešiasdešimt', 'septyniasdešimt',
+            'aštuoniasdešimt', 'devyniasdešimt']
+    more = ['šimtas', 'tūkstantis', 'milijonas', 'milijardas']
+
+    kuopin = ['dvejetas', 'trejetas', 'ketvertas', 'penketas', 'šešetas', 'septynetas', 'aštuonetas',
+              'devynetas']  # sktv.raid.kuopin.V.
+
+    daugin = ['vieneri', 'dveji', 'treji', 'ketveri', 'penkeri', 'šešeri', 'septyneri', 'aštuoneri', 'devyneri']
+
+    # cardinal plural numbers
+    for i in range(len(daugin)):
+        n = numeralise(daugin[i], daugin[i], 'sktv.raid.daugin.vyr.V.')
+        numerals.append(n)
+
+    # decline the numerals and add them to the main list
+    main_numerals = list()
+    for u in numerals:
+        for g in gender:
+            for c in cases:
+                main_numerals.append(decline_num(u, c, rqrd_gen=g))
+
+    singles = list()  # declined numerals from 1 to 9
+
+    # unlike other simple cardinal numerals, vienas has number
+    v = numeralise('vienas', 'vienas', 'sktv.raid.kiek.vyr.vns.V.')
+    for nu in number:
+        for g in gender:
+            for c in cases:
+                main_numerals.append(decline_num(v, c, nu, g))
+                if nu == 'vns':
+                    singles.append(decline_num(v, c, nu, g))
+
+    for tw in two_to_nine:
+        for g in gender:
+            for c in cases:
+                main_numerals.append(decline_num(numeralise(tw, tw, 'sktv.raid.kiek.vyr.V'), c, rqrd_gen=g))
+                singles.append(decline_num(numeralise(tw, tw, 'sktv.raid.kiek.vyr.V'), c, rqrd_gen=g))
+
+    teens = list()
+    for e in eleven_to_nineteen:
+        for c in cases:
+            main_numerals.append(decline_num(numeralise(e, e, 'sktv.raid.kiek.V.'), rqrd_infl=c))
+            teens.append(decline_num(numeralise(e, e, 'sktv.raid.kiek.V.'), rqrd_infl=c))
+
+    for t in tens:
+        main_numerals.append(numeralise(t, t, 'sktv.raid.kiek.'))
+        # decline the feminine version of the tens
+        for nu in number:
+            for c in cases:
+                main_numerals.append(
+                    decline_num(numeralise(t + 'is', t + 'is', 'sktv.raid.kiek.mot.vns.V.'), rqrd_infl=c, rqrd_num=nu))
+        if t != 'dešimt':
+            for k in singles:
+                main_numerals.append(numeralise(t + ' ' + k.word, t + ' ' + k.lemma, 'sktv.raid.kiek.' +
+                                                (k.gender + '.' if k.gender is not None else '') + '.' +
+                                                (k.number + '.' if k.number is not None else '') +
+                                                (k.infl + '.' if k.infl is not None else '')))
+    # decline cardinal numerals above 99
+    for m in more:
+        for nu in number:
+            for c in cases:
+                main_numerals.append(decline_num(numeralise(m, m, 'sktv.raid.kiek.vyr.vns.V.'), c, nu))
+
+    # decline collective numerals
+    for k in kuopin:
+        for c in cases:
+            main_numerals.append(decline_num(numeralise(k, k, 'sktv.raid.kuopin.V.'), rqrd_infl=c))
+
+    # decline ordinal numerals
+    singles = list()
+    for o in ord_one_to_nine:
+        main_numerals.append(numeralise(o[:-1], o, 'sktv.raid.kelint.bev.'))
+        singles.append(numeralise(o[:-1], o, 'sktv.raid.kelint.bev.'))
+        for nu in number:
+            for g in gender:
+                for c in cases:
+                    main_numerals.append(decline_num(numeralise(o, o, 'sktv.raid.kelint.vyr.vns.V.'), c, nu, g))
+                    main_numerals.append(num_def(numeralise(o, o, 'sktv.raid.kelint.vyr.vns.V.'), g, nu, c))
+                    singles.append(decline_num(numeralise(o, o, 'sktv.raid.kelint.vyr.vns.V.'), c, nu, g))
+                    singles.append(num_def(numeralise(o, o, 'sktv.raid.kelint.vyr.vns.V.'), g, nu, c))
+
+    for e in eleven_to_nineteen:
+        for nu in number:
+            for g in gender:
+                for c in cases:
+                    main_numerals.append(
+                        decline_num(numeralise(e[:-1] + 'tas', e[:-1] + 'tas', 'sktv.raid.kelint.vyr.vns.V.'), c, nu,
+                                    g))
+                    main_numerals.append(
+                        num_def(numeralise(e[:-1] + 'tas', e[:-1] + 'tas', 'sktv.raid.kelint.vyr.vns.V.'), g, nu, c))
+
+    for t in tens:
+        for nu in number:
+            for g in gender:
+                for c in cases:
+                    main_numerals.append(
+                        decline_num(numeralise(t + 'as', t + 'as', 'sktv.raid.kelint.vyr.vns.V.'), c, nu, g))
+                    main_numerals.append(
+                        num_def(numeralise(t + 'as', t + 'as', 'sktv.raid.kelint.vyr.vns.V.'), g, nu, c))
+        if t != 'dešimt':
+            for k in singles:
+                main_numerals.append(numeralise(t + ' ' + k.word, t + ' ' + k.lemma,
+                                                'sktv.raid.kelint.' + ('įvardž.' if k.dfnt else '')
+                                                + k.gender + '.' + (
+                                                    k.number + '.' if k.number is not None else '') + (
+                                                    k.infl + '.' if k.infl is not None else '')))
+
+    remaining = list()
+    remaining.append(numeralise('šimtas', 'šimtas', 'sktv.raid.kelint.vyr.vns.V.'))
+    remaining.append(numeralise('tūkstantas', 'tūkstantas', 'sktv.raid.kelint.vyr.vns.V.'))
+    remaining.append(numeralise('milijonas', 'milijonas', 'sktv.raid.kelint.vyr.vns.V.'))
+    remaining.append(numeralise('milijardas', 'milijardas', 'sktv.raid.kelint.vyr.vns.V.'))
+
+    remaining.append(numeralise('pirmesnis', 'pirmas', 'sktv.raid.kelint.aukšt.vyr.vns.V.'))
+    remaining.append(numeralise('pirmiausias', 'pirmas', 'sktv.raid.kelint.aukšč.vyr.vns.V.'))
+
+    for r in remaining:
+        for nu in number:
+            for g in gender:
+                for c in cases:
+                    main_numerals.append(decline_num(r, c, nu, g))
+                    main_numerals.append(num_def(r, g, nu, c))
+
+    main_numerals.append(numeralise('pirmiausia', 'pirmas', 'sktv.raid.kelint.aukšč.bev.'))
+
+    w = open(fileName, 'a', encoding='utf8')
+    for t in main_numerals:
+        xpos = num_to_xpos(t)
+        _, feats = xpos_to_feats(t)
+        # split multiword tokens into multiple lines
+        if len(t.word.split()) == 1:
+            w.write('0' + '\t' + t.word + '\t' + t.lemma + '\t' + 'NUM' + '\t' + xpos + '\t' + feats +
+                    '\t' + '_' + '\t' + '_' + '\t' + '_' + '\t' + '_' + '\n')
+        elif len(t.word.split()) > 1:
+            for i in range(len(t.word.split())):
+                if i < len(t.word.split()) - 1:
+                    if i == 0:
+                        insert = 'sampl.'
+                    else:
+                        insert = 'tęs.'
+                    for m in main_numerals:
+                        if m.word == t.word.split()[i] and m.num_type == 'kiek':
+                            m_xpos = num_to_xpos(m)
+                            _, m_feats = xpos_to_feats(m)
+                            w.write(
+                                '0' + '\t' + m.word + '\t' + m.lemma + '\t' + 'NUM' + '\t' + insert + m_xpos + '\t' + m_feats +
+                                '|Hyph=Yes' + '\t' + '_' + '\t' + '_' + '\t' + '_' + '\t' + '_' + '\n')
+                elif i == len(t.word.split()) - 1:
+                    w.write(
+                        '0' + '\t' + t.word.split()[i] + '\t' + t.lemma.split()[
+                            i] + '\t' + 'NUM' + '\t' + 'tęs.' + xpos + '\t' + feats +
+                        '|Hyph=Yes' + '\t' + '_' + '\t' + '_' + '\t' + '_' + '\t' + '_' + '\n')
+
+    w.close()
+
+def generate_freq_numerals(freqFileName, fileName):
+    """
+    Append the numerals found in the frequent numerals list to the already generated .conllu file
+    The list is manually edited to make sure it does not contain any forms that are already in the .conllu file
+    :param freqFileName: the list of remaining frequent numerals
+    :param fileName: file to append the numerals t
+    """
+
+    card_as = ['šimtas', 'milijonas', 'milijardas']
+
+    r = open(freqFileName, 'r', encoding='utf8')
+    lines = r.readlines()
+    r.close()
+
+    ordinals = list()
+    cardinals = list()
+
+    for l in lines:
+        word = l.strip()
+        # determine the numeral form
+        raid = False
+        arab = False
+        rom = False
+        rom_num = ['i', 'x', 'l', 'd', 'c', 'm', 'v']
+        for i in range(len(word)):
+            if word[i] in rom_num:
+                if i < len(word) - 1:
+                    if word[i + 1] in rom_num or word[i + 1] == '-' or '-' not in word:
+                        rom = True
+                    else:
+                        raid = True
+            elif word[i].isalpha():
+                raid = True
+            elif word[i].isdigit():
+                arab = True
+
+        if (raid and arab) or (raid and rom):
+            num_form = 'mišr.'
+        elif raid:
+            num_form = 'raid.'
+        elif rom:
+            num_form = 'rom.'
+        elif arab:
+            num_form = 'arab.'
+
+        if word.endswith('as') and word != 'vienas' and not (word.endswith('etas') or word.endswith('ertas')):
+            if word in card_as:
+                if word not in ordinals:
+                    ordinals.append(numeralise(word, word, 'sktv.' + num_form + 'kelint.vyr.vns.V.'))
+                if word not in cardinals:
+                    cardinals.append(numeralise(word, word, 'sktv.' + num_form + 'kiek.vyr.vns.V.'))
+            else:
+                ordinals.append(numeralise(word, word, 'sktv.' + num_form + 'kelint.vyr.vns.V.'))
+        elif word.endswith('eji') or word.endswith('eri'):
+            cardinals.append(numeralise(word, word, 'sktv.' + num_form + 'daugin.vyr.V.'))
+
+    number = ['vns', 'dgs']
+    gender = ['mot', 'vyr']
+    cases = ['V', 'K', 'N', 'G', 'Įn', 'Vt']
+    w = open(fileName, 'a', encoding='utf8')
+    for ca in ordinals:
+        for nu in number:
+            for g in gender:
+                for c in cases:
+                    d = decline_num(ca, c, nu, g)
+                    xpos = num_to_xpos(d)
+                    _, feats = xpos_to_feats(d)
+                    w.write('0' + '\t' + d.word + '\t' + d.lemma + '\t' + 'NUM' + '\t' + xpos + '\t' + feats +
+                            '\t' + '_' + '\t' + '_' + '\t' + '_' + '\t' + '_' + '\n')
+                    defin = num_def(ca, g, nu, c)
+                    xpos = num_to_xpos(defin)
+                    _, feats = xpos_to_feats(defin)
+                    w.write('0' + '\t' + defin.word + '\t' + defin.lemma + '\t' + 'NUM' + '\t' + xpos + '\t' + feats +
+                            '\t' + '_' + '\t' + '_' + '\t' + '_' + '\t' + '_' + '\n')
+
+    for o in cardinals:
+        for g in gender:
+            for c in cases:
+                d = decline_num(o, c, rqrd_gen=g)
+                xpos = num_to_xpos(d)
+                _, feats = xpos_to_feats(d)
+                w.write('0' + '\t' + d.word + '\t' + d.lemma + '\t' + 'NUM' + '\t' + xpos + '\t' + feats +
+                        '\t' + '_' + '\t' + '_' + '\t' + '_' + '\t' + '_' + '\n')
+
+    w.close()
