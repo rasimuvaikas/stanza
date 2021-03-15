@@ -21,7 +21,9 @@
 
 The post-filtering mechanism has been developed for Lithuanian and North Sami models, but can also be used with other pretrained taggers in prediction mode.
 
-A morphological dictionary in CONLL-U format, stored as a MySQL table, is necessary for the filter to be activated, and is accessed through stanza/stanza/models/pos/morph.py.
+A morphological dictionary in CONLL-U format, stored as a MySQL table, is necessary for the filter to be activated, and is accessed through `stanza/stanza/models/pos/morph.py`.  
+Edit `stanza/stanza/models/pos/config.properties` and run `stanza/data_files/sme/morph_dict/table_filler.py` and `stanza/data_files/lt/morph_dict/table_filler.py` to create the MySQL tables.
+
 
 To obtain filtered predictions run `python -m stanza.models.tagger` in the command line along with the following args:
 
@@ -33,7 +35,30 @@ To obtain filtered predictions run `python -m stanza.models.tagger` in the comma
 - --mode predict
 - --save_dir (path to the directory where the pretrained model is stored)
 - --save_name (name of the pretrained model)
-- --morph_dict (name of the MySQL table storing the morphological dictionary)
+- --morph_dict (name of the MySQL table storing the morphological dictionary (e.g.: lt for Lithuanian, sme for North Sami)
+
+##
+
+The repository contains data files collected from the following sources:
+
+* https://github.com/Semantika2/Hunspell-Zodynai-ir-gramatika-v.45:  
+  `stanza/data_files/hunspell/lt-LT_morphology.aff`  
+  `stanza/data_files/hunspell/lt-LT_morphology.dic`  
+
+* https://github.com/UniversalDependencies/UD_Lithuanian-ALKSNIS/tree/master:  
+  `stanza/data_files/lt/lt_alksnis-ud-test.conllu`  
+  `stanza/data_files/lt/morph_dict/lt_alksnis-ud-train.conllu`  
+  `stanza/data_files/lt/morph_dict/lt_alksnis-ud-dev.conllu`  
+ 
+* https://github.com/UniversalDependencies/UD_North_Sami-Giella/tree/master:  
+  `stanza/data_files/sme/sme_giella-ud-test.conllu`  
+  `stanza/data_files/sme/morph_dict/sme_giella-ud-train.conllu`  
+
+
+
+
+
+
 
 
 ## LICENSE
