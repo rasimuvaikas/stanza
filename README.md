@@ -37,6 +37,19 @@ To obtain filtered predictions run `python -m stanza.models.tagger` in the comma
 - --save_name (name of the pretrained model)
 - --morph_dict (name of the MySQL table storing the morphological dictionary (e.g.: lt for Lithuanian, sme for North Sami)
 
+For pretrained models refer to https://stanfordnlp.github.io/stanza/download_models.html
+
+## Downloading pretrained embeddings without using the .sh script
+
+* Lithuanian:  
+  Download from https://dl.fbaipublicfiles.com/fasttext/vectors-wiki/wiki.lt.vec  
+  Rename the .vec file to `lt.vectors`, compress it into .xz and place it in a directory with the following path : `embedding_directory_name/fasttext/Lithuanian`
+
+* North Sami:
+  Download from https://dl.fbaipublicfiles.com/fasttext/vectors-wiki/wiki.se.zip  
+  Rename the .vec file to `sme.vectors`, compress it into .xz and place it in a directory with the following path : `embedding_directory_name/fasttext/North_Sami`
+
+
 ##
 
 The repository contains data files collected from the following sources:
